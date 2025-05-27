@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.redisUtils = exports.connectRedis = void 0;
 const redis_1 = require("@upstash/redis");
@@ -35,12 +26,12 @@ const redis = new redis_1.Redis({
     url: convertToUpstashUrl(process.env.REDIS_URL),
     token: process.env.REDIS_TOKEN,
 });
-const connectRedis = () => __awaiter(void 0, void 0, void 0, function* () {
+const connectRedis = async () => {
     try {
         console.log('🔴 Connecting to Redis...');
         console.log('📍 Redis URL:', convertToUpstashUrl(process.env.REDIS_URL));
         // Test connection with a simple ping
-        const result = yield redis.ping();
+        const result = await redis.ping();
         console.log('✅ Redis ping result:', result);
         return redis;
     }
@@ -48,37 +39,37 @@ const connectRedis = () => __awaiter(void 0, void 0, void 0, function* () {
         console.error('❌ Failed to connect to Redis:', error);
         throw error;
     }
-});
+};
 exports.connectRedis = connectRedis;
 // Export the redis instance for use in other parts of your app
 exports.default = redis;
 // Utility functions for common Redis operations
 exports.redisUtils = {
     // Set key with expiration
-    setWithExpiry: (key_1, value_1, ...args_1) => __awaiter(void 0, [key_1, value_1, ...args_1], void 0, function* (key, value, seconds = 3600) {
-        return yield redis.setex(key, seconds, JSON.stringify(value));
-    }),
+    setWithExpiry: async (key, value, seconds = 3600) => {
+        return await redis.setex(key, seconds, JSON.stringify(value));
+    },
     // Get and parse JSON
-    getJSON: (key) => __awaiter(void 0, void 0, void 0, function* () {
-        const value = yield redis.get(key);
+    getJSON: async (key) => {
+        const value = await redis.get(key);
         return value ? JSON.parse(value) : null;
-    }),
+    },
     // Delete key
-    delete: (key) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield redis.del(key);
-    }),
+    delete: async (key) => {
+        return await redis.del(key);
+    },
     // Check if key exists
-    exists: (key) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield redis.exists(key);
-    }),
+    exists: async (key) => {
+        return await redis.exists(key);
+    },
     // Set multiple keys
-    mset: (keyValuePairs) => __awaiter(void 0, void 0, void 0, function* () {
+    mset: async (keyValuePairs) => {
         const pairs = [];
         Object.entries(keyValuePairs).forEach(([key, value]) => {
             pairs.push([key, JSON.stringify(value)]);
         });
         // Use Object.fromEntries to create proper key-value object
         const keyValueObj = Object.fromEntries(pairs);
-        return yield redis.mset(keyValueObj);
-    })
+        return await redis.mset(keyValueObj);
+    }
 };

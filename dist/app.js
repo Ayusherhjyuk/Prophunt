@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -60,20 +51,23 @@ app.use((req, res) => {
 // Error handler
 app.use((error, req, res, next) => {
     console.error('Error:', error);
-    res.status(error.status || 500).json(Object.assign({ message: error.message || 'Internal server error' }, (process.env.NODE_ENV === 'development' && { stack: error.stack })));
+    res.status(error.status || 500).json({
+        message: error.message || 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    });
 });
 const PORT = process.env.PORT || 5000;
-const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
+const startServer = async () => {
     try {
         // console.log('Starting server initialization...');
         // console.log(`Environment: ${process.env.NODE_ENV}`);
         // Connect to MongoDB
         // console.log('Connecting to MongoDB...');
-        yield (0, database_1.default)();
+        await (0, database_1.default)();
         console.log('MongoDB connected successfully');
         // Connect to Redis
         // console.log('Connecting to Redis...');
-        yield (0, redis_1.connectRedis)();
+        await (0, redis_1.connectRedis)();
         console.log('Redis connected successfully');
         app.listen(PORT, () => {
             console.log('\nServer started successfully!');
@@ -85,6 +79,6 @@ const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
         console.error('Failed to start server:', error);
         process.exit(1);
     }
-});
+};
 startServer();
 exports.default = app;

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -19,26 +10,25 @@ const User_1 = __importDefault(require("../models/User"));
 const database_1 = __importDefault(require("../config/database"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const importCSV = () => __awaiter(void 0, void 0, void 0, function* () {
+const importCSV = async () => {
     try {
-        yield (0, database_1.default)();
+        await (0, database_1.default)();
         // Create a default user for imported properties
-        let defaultUser = yield User_1.default.findOne({ email: 'admin@properties.com' });
+        let defaultUser = await User_1.default.findOne({ email: 'admin@properties.com' });
         if (!defaultUser) {
-            defaultUser = yield User_1.default.create({
+            defaultUser = await User_1.default.create({
                 email: 'admin@properties.com',
                 password: 'admin123',
                 name: 'Property Admin'
             });
         }
         // Clear existing properties
-        yield Property_1.default.deleteMany({});
+        await Property_1.default.deleteMany({});
         console.log('Cleared existing properties');
         const properties = [];
         fs_1.default.createReadStream('./data/properties.csv')
             .pipe((0, csv_parser_1.default)())
             .on('data', (row) => {
-            var _a;
             const property = {
                 id: row.id,
                 title: row.title,
@@ -56,15 +46,15 @@ const importCSV = () => __awaiter(void 0, void 0, void 0, function* () {
                 tags: row.tags || '',
                 colorTheme: row.colorTheme || '',
                 rating: parseFloat(row.rating) || 0,
-                isVerified: ((_a = row.isVerified) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === 'true',
+                isVerified: row.isVerified?.toLowerCase() === 'true',
                 listingType: row.listingType || '',
                 createdBy: defaultUser._id
             };
             properties.push(property);
         })
-            .on('end', () => __awaiter(void 0, void 0, void 0, function* () {
+            .on('end', async () => {
             try {
-                yield Property_1.default.insertMany(properties);
+                await Property_1.default.insertMany(properties);
                 console.log(`Successfully imported ${properties.length} properties`);
                 process.exit(0);
             }
@@ -72,7 +62,7 @@ const importCSV = () => __awaiter(void 0, void 0, void 0, function* () {
                 console.error('Error inserting properties:', error);
                 process.exit(1);
             }
-        }))
+        })
             .on('error', (error) => {
             console.error('Error reading CSV:', error);
             process.exit(1);
@@ -82,7 +72,7 @@ const importCSV = () => __awaiter(void 0, void 0, void 0, function* () {
         console.error('Import error:', error);
         process.exit(1);
     }
-});
+};
 if (require.main === module) {
     importCSV();
 }
